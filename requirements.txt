@@ -1,0 +1,6 @@
+# Este proyecto utiliza únicamente librerías estándar de Python.
+# No requiere dependencias externas instalables con pip.
+#
+# Requisitos:
+# - Python 3.10 o superior
+# - Tkinter habilitado
