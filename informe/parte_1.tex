@@ -1,0 +1,699 @@
+\section{Introducción}
+
+La gestión de memoria es una de las funciones fundamentales de un sistema operativo, ya que permite administrar eficientemente la memoria RAM para ejecutar múltiples procesos de manera concurrente.
+
+En este informe se analizan distintos algoritmos de asignación de memoria implementados en Python mediante la clase \texttt{GestorMemoria}. Se estudian los siguientes métodos:
+
+\begin{itemize}
+    \item Particiones fijas
+    \item Particiones dinámicas
+    \item Particiones dinámicas con compactación
+    \item Algoritmo de gemelos (Buddy System)
+\end{itemize}
+
+Además, se analizan los algoritmos de selección de bloques:
+
+\begin{itemize}
+    \item First Fit
+    \item Best Fit
+    \item Worst Fit
+\end{itemize}
+
+Finalmente, se explica detalladamente cómo cada algoritmo fue implementado dentro del código proporcionado.
+
+%------------------------------------------------
+
+\section{Objetivos}
+
+\subsection{Objetivo General}
+
+Analizar e implementar distintos algoritmos de gestión de memoria utilizados en sistemas operativos.
+
+\subsection{Objetivos Específicos}
+
+\begin{itemize}
+    \item Comprender el funcionamiento de las particiones fijas y dinámicas.
+    
+    \item Analizar el problema de fragmentación interna y externa.
+    
+    \item Estudiar el funcionamiento de la compactación de memoria.
+    
+    \item Implementar y analizar el algoritmo de gemelos.
+    
+    \item Comparar los algoritmos First Fit, Best Fit y Worst Fit.
+\end{itemize}
+
+%------------------------------------------------
+
+\section{Marco Teórico}
+
+\subsection{Gestión de Memoria}
+
+La gestión de memoria es el proceso mediante el cual el sistema operativo administra la memoria RAM disponible para los procesos.
+
+Cada proceso necesita una cantidad determinada de memoria para ejecutarse, por lo que el sistema debe decidir:
+
+\begin{itemize}
+    \item Dónde almacenar cada proceso.
+    \item Cómo reutilizar memoria liberada.
+    \item Cómo minimizar desperdicio de memoria.
+\end{itemize}
+
+%------------------------------------------------
+
+\subsection{Fragmentación}
+
+La fragmentación representa memoria desperdiciada durante la asignación.
+
+\subsubsection{Fragmentación Interna}
+
+Ocurre cuando un proceso utiliza menos memoria que el tamaño del bloque asignado.
+
+\textbf{Ejemplo:}
+
+\begin{itemize}
+    \item Bloque asignado: 256 KB
+    \item Proceso: 200 KB
+    \item Fragmentación interna: 56 KB
+\end{itemize}
+
+\subsubsection{Fragmentación Externa}
+
+Ocurre cuando existen pequeños espacios libres dispersos en memoria que no pueden utilizarse eficientemente.
+
+%------------------------------------------------
+
+\section{Particiones Fijas}
+
+\subsection{Definición}
+
+En este esquema, la memoria se divide previamente en bloques de tamaño fijo.
+
+Cada partición puede almacenar únicamente un proceso.
+
+\subsection{Ventajas}
+
+\begin{itemize}
+    \item Implementación sencilla.
+    \item Administración rápida.
+\end{itemize}
+
+\subsection{Desventajas}
+
+\begin{itemize}
+    \item Alta fragmentación interna.
+    \item Limitación en el número de procesos simultáneos.
+\end{itemize}
+
+\subsection{Implementación}
+
+Las particiones se crean en el constructor:
+
+\begin{lstlisting}[language=Python]
+if tipo_memoria == "Fijas":
+
+    inicio = 0
+
+    for tam in particiones_fijas:
+
+        self.bloques.append(
+            BloqueMemoria(inicio, tam)
+        )
+
+        inicio += tam
+\end{lstlisting}
+
+\subsection{Asignación de Procesos}
+
+\begin{lstlisting}[language=Python]
+bloque.libre = False
+
+bloque.proceso = proceso
+
+bloque.fragmentacion = (
+    bloque.tamano - proceso.memoria
+)
+\end{lstlisting}
+
+La fragmentación interna se calcula mediante:
+
+\[
+Fragmentacion = TamanoBloque - TamanoProceso
+\]
+
+%------------------------------------------------
+
+\section{Particiones Dinámicas}
+
+\subsection{Definición}
+
+La memoria no se divide previamente. Los bloques son creados dinámicamente según las necesidades de cada proceso.
+
+\subsection{Ventajas}
+
+\begin{itemize}
+    \item Menor fragmentación interna.
+    \item Mejor aprovechamiento de memoria.
+\end{itemize}
+
+\subsection{Desventajas}
+
+\begin{itemize}
+    \item Produce fragmentación externa.
+\end{itemize}
+
+\subsection{Inicialización}
+
+Inicialmente existe un único bloque libre:
+
+\begin{lstlisting}[language=Python]
+self.bloques.append(
+    BloqueMemoria(0, total_ram)
+)
+\end{lstlisting}
+
+\subsection{División de Bloques}
+
+\begin{lstlisting}[language=Python]
+nuevo = BloqueMemoria(
+    bloque.inicio,
+    proceso.memoria,
+    libre=False,
+    proceso=proceso
+)
+\end{lstlisting}
+
+Cálculo del espacio restante:
+
+\begin{lstlisting}[language=Python]
+restante = (
+    bloque.tamano - proceso.memoria
+)
+\end{lstlisting}
+
+Creación del bloque libre restante:
+
+\begin{lstlisting}[language=Python]
+if restante > 0:
+
+    libre = BloqueMemoria(
+        nuevo.inicio + proceso.memoria,
+        restante
+    )
+
+    self.bloques.insert(
+        indice + 1,
+        libre
+    )
+\end{lstlisting}
+
+%------------------------------------------------
+
+\section{Particiones Dinámicas con Compactación}
+
+\subsection{Definición}
+
+La compactación reorganiza los bloques ocupados para unir toda la memoria libre en una sola región continua.
+
+\subsection{Ventajas}
+
+\begin{itemize}
+    \item Reduce fragmentación externa.
+    \item Permite reutilizar memoria dispersa.
+\end{itemize}
+
+\subsection{Desventajas}
+
+\begin{itemize}
+    \item Alto costo computacional.
+    \item Reubicación constante de procesos.
+\end{itemize}
+
+\subsection{Implementación}
+
+Si no existe memoria suficiente:
+
+\begin{lstlisting}[language=Python]
+if not libres:
+
+    if self.tipo_memoria == "Dinamicas Compactacion":
+
+        self.compactar()
+\end{lstlisting}
+
+Compactación de bloques:
+
+\begin{lstlisting}[language=Python]
+for b in ocupados:
+
+    nuevo = BloqueMemoria(
+        inicio,
+        b.tamano,
+        libre=False,
+        proceso=b.proceso
+    )
+
+    nuevos.append(nuevo)
+
+    inicio += b.tamano
+\end{lstlisting}
+
+Creación del bloque libre final:
+
+\begin{lstlisting}[language=Python]
+libre_total = self.total_ram - inicio
+\end{lstlisting}
+
+%------------------------------------------------
+
+\section{Algoritmo de Gemelos (Buddy System)}
+
+\subsection{Definición}
+
+El algoritmo de gemelos divide la memoria en bloques cuyo tamaño corresponde a potencias de 2.
+
+\subsection{Funcionamiento}
+
+\begin{enumerate}
+    \item Se busca un bloque libre adecuado.
+    
+    \item Si el bloque es demasiado grande, se divide en dos mitades iguales.
+    
+    \item La división continúa hasta obtener el tamaño mínimo suficiente.
+    
+    \item Cuando un bloque se libera, puede fusionarse con su bloque gemelo.
+\end{enumerate}
+
+%------------------------------------------------
+
+\subsection{Obtención de Potencia de 2}
+
+\begin{lstlisting}[language=Python]
+tam_requerido = 1
+
+while tam_requerido < proceso.memoria:
+    tam_requerido *= 2
+\end{lstlisting}
+
+%------------------------------------------------
+
+\subsection{División de Bloques}
+
+\begin{lstlisting}[language=Python]
+while (
+    bloque.tamano // 2 >= tam_requerido
+):
+\end{lstlisting}
+
+Creación de bloques gemelos:
+
+\begin{lstlisting}[language=Python]
+bloque1 = BloqueMemoria(
+    bloque.inicio,
+    mitad
+)
+
+bloque2 = BloqueMemoria(
+    bloque.inicio + mitad,
+    mitad
+)
+\end{lstlisting}
+
+%------------------------------------------------
+
+\subsection{Fusión de Gemelos}
+
+Verificación de buddies:
+
+\begin{lstlisting}[language=Python]
+if a.inicio ^ a.tamano == b.inicio:
+\end{lstlisting}
+
+Fusión:
+
+\begin{lstlisting}[language=Python]
+nuevo = BloqueMemoria(
+    min(a.inicio, b.inicio),
+    a.tamano * 2
+)
+\end{lstlisting}
+
+%------------------------------------------------
+
+\section{Algoritmos de Asignación}
+
+\subsection{First Fit}
+
+Selecciona el primer bloque disponible que sea suficientemente grande.
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[language=Python]
+if self.algoritmo == "First Fit":
+
+    bloque = libres[0]
+\end{lstlisting}
+
+\subsubsection{Ventajas}
+
+\begin{itemize}
+    \item Muy rápido.
+    \item Bajo costo computacional.
+\end{itemize}
+
+\subsubsection{Desventajas}
+
+\begin{itemize}
+    \item Incrementa fragmentación externa.
+\end{itemize}
+
+%------------------------------------------------
+
+\subsection{Best Fit}
+
+Selecciona el bloque más pequeño posible que pueda almacenar el proceso.
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[language=Python]
+bloque = min(
+    libres,
+    key=lambda b: b.tamano
+)
+\end{lstlisting}
+
+\subsubsection{Ventajas}
+
+\begin{itemize}
+    \item Reduce desperdicio inmediato.
+\end{itemize}
+
+\subsubsection{Desventajas}
+
+\begin{itemize}
+    \item Genera bloques libres pequeños.
+\end{itemize}
+
+%------------------------------------------------
+
+\subsection{Worst Fit}
+
+Selecciona el bloque libre más grande disponible.
+
+\subsubsection{Implementación}
+
+\begin{lstlisting}[language=Python]
+bloque = max(
+    libres,
+    key=lambda b: b.tamano
+)
+\end{lstlisting}
+
+\subsubsection{Ventajas}
+
+\begin{itemize}
+    \item Mantiene bloques libres grandes.
+\end{itemize}
+
+\subsubsection{Desventajas}
+
+\begin{itemize}
+    \item Puede desperdiciar memoria.
+\end{itemize}
+
+%------------------------------------------------
+
+\section{Análisis General de la Implementación}
+
+\subsection{Diseño Modular}
+
+La implementación utiliza programación orientada a objetos mediante:
+
+\begin{itemize}
+    \item Clase \texttt{GestorMemoria}
+    \item Clase \texttt{BloqueMemoria}
+\end{itemize}
+
+Esto permite reutilizar y extender funcionalidades fácilmente.
+
+%------------------------------------------------
+
+\subsection{Lista de Bloques}
+
+Toda la memoria es administrada mediante:
+
+\begin{lstlisting}[language=Python]
+self.bloques
+\end{lstlisting}
+
+Cada elemento representa una región continua de memoria.
+
+%------------------------------------------------
+
+\subsection{Liberación y Unión de Memoria}
+
+Cuando un proceso termina:
+
+\begin{lstlisting}[language=Python]
+b.libre = True
+
+b.proceso = None
+
+b.fragmentacion = 0
+\end{lstlisting}
+
+Posteriormente se fusionan bloques contiguos:
+
+\begin{lstlisting}[language=Python]
+self.unir_libres()
+\end{lstlisting}
+
+%------------------------------------------------
+
+\subsection{Ventajas de la Implementación}
+
+\begin{itemize}
+    \item Código modular y extensible.
+    
+    \item Fácil visualización del estado de memoria.
+    
+    \item Permite comparar múltiples algoritmos.
+    
+    \item Simula correctamente fragmentación y compactación.
+\end{itemize}
+
+%------------------------------------------------
+
+\subsection{Limitaciones}
+
+\begin{itemize}
+    \item No implementa memoria virtual.
+    
+    \item No existe paginación.
+    
+    \item No implementa swapping.
+    
+    \item Compactación posee alto costo computacional.
+\end{itemize}
+
+%------------------------------------------------
+
+\section{Conclusiones}
+
+\begin{itemize}
+    \item Las particiones fijas son simples, pero generan alta fragmentación interna.
+    
+    \item Las particiones dinámicas aprovechan mejor la memoria, aunque generan fragmentación externa.
+    
+    \item La compactación mejora el aprovechamiento de memoria al unir espacios dispersos.
+    
+    \item El algoritmo de gemelos proporciona divisiones y fusiones eficientes utilizando bloques potencia de 2.
+    
+    \item First Fit prioriza velocidad, Best Fit minimiza desperdicio inmediato y Worst Fit intenta preservar bloques grandes.
+    
+    \item La implementación desarrollada permite comparar diferentes estrategias de asignación de memoria de manera modular y flexible.
+\end{itemize}
+
+%------------------------------------------------
+
+\section{Código Completo Implementado}
+
+\begin{lstlisting}[language=Python]
+from models.bloque_memoria import BloqueMemoria
+
+
+class GestorMemoria:
+
+    def __init__(
+        self,
+        total_ram,
+        tipo_memoria,
+        algoritmo,
+        particiones_fijas=None
+    ):
+
+        self.total_ram = total_ram
+
+        self.tipo_memoria = tipo_memoria
+
+        self.algoritmo = algoritmo
+
+        self.bloques = []
+
+        if tipo_memoria == "Fijas":
+
+            inicio = 0
+
+            for tam in particiones_fijas:
+
+                self.bloques.append(
+                    BloqueMemoria(inicio, tam)
+                )
+
+                inicio += tam
+
+        else:
+
+            self.bloques.append(
+                BloqueMemoria(0, total_ram)
+            )
+
+    def asignar(self, proceso):
+
+        libres = [
+            b for b in self.bloques
+            if b.libre and b.tamano >= proceso.memoria
+        ]
+
+        if not libres:
+
+            if self.tipo_memoria == "Dinamicas Compactacion":
+
+                self.compactar()
+
+                libres = [
+                    b for b in self.bloques
+                    if b.libre and b.tamano >= proceso.memoria
+                ]
+
+            if not libres:
+                return False
+
+        if self.tipo_memoria == "Gemelos":
+
+            bloque = min(
+                libres,
+                key=lambda b: b.tamano
+            )
+
+            tam_requerido = 1
+
+            while tam_requerido < proceso.memoria:
+                tam_requerido *= 2
+
+            while (
+                bloque.tamano // 2 >= tam_requerido
+            ):
+
+                mitad = bloque.tamano // 2
+
+                indice = self.bloques.index(bloque)
+
+                bloque1 = BloqueMemoria(
+                    bloque.inicio,
+                    mitad
+                )
+
+                bloque2 = BloqueMemoria(
+                    bloque.inicio + mitad,
+                    mitad
+                )
+
+                self.bloques.pop(indice)
+
+                self.bloques.insert(indice, bloque2)
+
+                self.bloques.insert(indice, bloque1)
+
+                bloque = bloque1
+
+            bloque.libre = False
+
+            bloque.proceso = proceso
+
+            bloque.fragmentacion = (
+                bloque.tamano - proceso.memoria
+            )
+
+            return True
+
+        if self.algoritmo == "First Fit":
+
+            bloque = libres[0]
+
+        elif self.algoritmo == "Best Fit":
+
+            bloque = min(
+                libres,
+                key=lambda b: b.tamano
+            )
+
+        else:
+
+            bloque = max(
+                libres,
+                key=lambda b: b.tamano
+            )
+
+        if self.tipo_memoria == "Fijas":
+
+            bloque.libre = False
+
+            bloque.proceso = proceso
+
+            bloque.fragmentacion = (
+                bloque.tamano - proceso.memoria
+            )
+
+            return True
+
+        nuevo = BloqueMemoria(
+            bloque.inicio,
+            proceso.memoria,
+            libre=False,
+            proceso=proceso
+        )
+
+        restante = (
+            bloque.tamano - proceso.memoria
+        )
+
+        indice = self.bloques.index(bloque)
+
+        self.bloques.pop(indice)
+
+        self.bloques.insert(indice, nuevo)
+
+        if restante > 0:
+
+            libre = BloqueMemoria(
+                nuevo.inicio + proceso.memoria,
+                restante
+            )
+
+            self.bloques.insert(
+                indice + 1,
+                libre
+            )
+
+        return True
+\end{lstlisting}
+
+\section{Repositorio del Proyecto}
+
+El código fuente completo del proyecto se encuentra disponible en GitHub:
+
+\begin{center}
+\href{https://github.com/Elemauz/Gestion-de-Memoria}
+{Repositorio Oficial del Proyecto}
+\end{center}

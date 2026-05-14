@@ -1,0 +1,58 @@
+\documentclass[12pt, spanish]{article}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings} 
+\usepackage{pdfpages} 
+\usepackage{float}
+\definecolor{codeblue}{rgb}{0.0,0.0,0.8}
+\definecolor{commentgreen}{rgb}{0.0,0.5,0.0}
+
+\newtheorem{definition}{Definición}
+
+
+\geometry{a4paper, margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Sistemas Operativos - Gestion de Memoria}
+\lfoot{Ingeniería De Sistemas}
+\rfoot{\thepage}
+
+\lstset{ 
+    backgroundcolor=\color{lightgray}, 
+    basicstyle=\ttfamily\small, 
+    keywordstyle=\color{codeblue}\bfseries, 
+    commentstyle=\color{commentgreen}\itshape, 
+    stringstyle=\color{red}, 
+    breaklines=true, 
+    frame=single, 
+    showstringspaces=false, 
+    inputencoding=utf8, 
+    literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1, 
+}
+
+
+\title{\textbf{INFORME DE LABORATORIO N°3}}
+\author{Antony Brandon Quispe Calizaya \\ Sistemas Operativos}
+\date{}
+
+
+\begin{document}
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+
+\input{parte_1.tex}
+
+
+\end{document}
